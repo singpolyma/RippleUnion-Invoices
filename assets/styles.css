@@ -1,0 +1,12 @@
+@import "//rippleunion.com/base.css";
+@import "//rippleunion.com/form.css";
+
+form {
+	display: table;
+	margin: auto;
+}
+
+p {
+	text-align: center;
+	margin-top: 3em;
+}

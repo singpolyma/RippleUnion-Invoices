@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		{{> meta.mustache}}
+	</head>
+
+	<body>
+		{{> header.mustache}}
+
+		<p>This form will let you send an invoice to anyone who uses <a href="https://ripple.com">Ripple.com</a>.</p>
+
+		<form method="post" action="{{invoiceFormAction}}">
+			{{{renderedInvoiceForm}}}
+			<button type="submit">Send Invoice</button>
+		</form>
+	</body>
+</html>

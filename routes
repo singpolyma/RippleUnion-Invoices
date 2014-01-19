@@ -1,0 +1,2 @@
+GET /invoice => rippleInvoiceForm
+POST /invoice => sendRippleInvoice
