@@ -63,7 +63,7 @@ invoiceForm classic = do
 showInvoiceForm :: Bool -> URI -> Application
 showInvoiceForm classic root (Request {queryString = qs}) = do
 	(form,_) <- postSimpleForm hideErr (return $ queryFormEnv qs) (invoiceForm classic)
-	textBuilder ok200 [htmlCT] $ viewHome htmlEscape (Home form path)
+	textBuilder ok200 [htmlCT] $ viewHome htmlEscape (Home form path classic)
 	where
 	path
 		| classic = sendClassicInvoicePath `relativeTo` root
@@ -92,7 +92,7 @@ sendInvoice classic root req = do
 			}
 			redirect' seeOther303 [] home
 		Nothing ->
-			textBuilder ok200 [htmlCT] $ viewHome htmlEscape (Home form path)
+			textBuilder ok200 [htmlCT] $ viewHome htmlEscape (Home form path classic)
 	where
 	template
 		| classic = viewClassicEmail

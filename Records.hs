@@ -49,7 +49,8 @@ instance DefaultValidation Currency where
 
 data Home = Home {
 		renderedInvoiceForm :: Html,
-		invoiceFormAction :: URI
+		invoiceFormAction :: URI,
+		classic :: Bool
 	}
 
 data Invoice = Invoice {

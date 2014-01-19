@@ -7,7 +7,12 @@
 	<body>
 		{{> header.mustache}}
 
-		<p>This form will let you send an invoice to anyone who uses <a href="https://ripple.com">Ripple.com</a>.</p>
+		{{#classic}}
+			<p>This form will let you send an invoice to anyone who uses <a href="https://classic.ripplepay.com">Ripple Classic</a>.</p>
+		{{/classic}}
+		{{^classic}}
+			<p>This form will let you send an invoice to anyone who uses <a href="https://ripple.com">Ripple.com</a>.</p>
+		{{/classic}}
 
 		<form method="post" action="{{invoiceFormAction}}">
 			{{{renderedInvoiceForm}}}
