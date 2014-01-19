@@ -26,6 +26,9 @@ instance Buildable URI where
 instance Buildable RippleAddress where
 	build = build . show
 
+instance (Buildable a, Buildable b) => Buildable (Either a b) where
+	build = either build build
+
 instance Buildable Currency where
 	build = build . showC
 		where
@@ -52,7 +55,7 @@ data Home = Home {
 data Invoice = Invoice {
 		from :: EmailAddress,
 		to :: EmailAddress,
-		ripple :: RippleAddress,
+		ripple :: Either Text RippleAddress, -- classic username or address
 		amount :: Double,
 		currency :: Currency,
 		message :: Text

@@ -1,2 +1,5 @@
 GET /invoice => rippleInvoiceForm
 POST /invoice => sendRippleInvoice
+
+GET /invoice/classic => classicInvoiceForm
+POST /invoice/classic => sendClassicInvoice

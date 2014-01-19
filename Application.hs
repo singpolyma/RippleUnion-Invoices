@@ -1,8 +1,9 @@
 {-# LANGUAGE CPP #-}
-module Application (rippleInvoiceForm, sendRippleInvoice) where
+module Application (rippleInvoiceForm, sendRippleInvoice, classicInvoiceForm, sendClassicInvoice) where
 
 import Prelude ()
 import BasicPrelude
+import Data.Either.Combinators (leftToMaybe, rightToMaybe)
 import qualified Data.Text as T
 
 import Network.Wai (Application, Request(..))
@@ -41,34 +42,47 @@ htmlEscape = concatMap escChar
 lbl :: String -> Maybe Label
 lbl = Just . Label . s
 
-invoiceForm :: (Functor m, MonadIO m) => SimpleForm' m Invoice
-invoiceForm = do
+invoiceForm :: (Functor m, MonadIO m) => Bool -> SimpleForm' m Invoice
+invoiceForm classic = do
 	from'     <- input_ (s"from") (Just . from)
 	to'       <- input_ (s"to") (Just . to)
-	ripple'   <- input  (s"ripple") (Just . ShowRead . ripple) (wdef,vdef)
-		(mempty {label = lbl"Your Ripple address"})
+	ripple' <- uncurry (input (s"ripple") (Just . fmap ShowRead . ripple)) $
+			if classic then
+					((wdef . (>>= leftToMaybe), fmap Left vdef),
+					mempty {label = lbl"Your username"})
+			else
+					((wdef . (>>= rightToMaybe), fmap Right vdef),
+					mempty {label = lbl"Your Ripple address"})
 	amount'   <- input_ (s"amount") (Just . amount)
 	currency' <- input_ (s"currency") (Just . currency)
 	message'   <- input  (s"message") (Just . message) (textarea,vdef)
 		(mempty {required = False})
 
-	return $ Invoice <$> from' <*> to' <*> fmap unShowRead ripple' <*> amount' <*> currency' <*> message'
+	return $ Invoice <$> from' <*> to' <*> (fmap (fmap unShowRead) ripple') <*> amount' <*> currency' <*> message'
 
-rippleInvoiceForm :: URI -> Application
-rippleInvoiceForm root (Request {queryString = qs}) = do
-	(form,_) <- postSimpleForm hideErr (return $ queryFormEnv qs) invoiceForm
+showInvoiceForm :: Bool -> URI -> Application
+showInvoiceForm classic root (Request {queryString = qs}) = do
+	(form,_) <- postSimpleForm hideErr (return $ queryFormEnv qs) (invoiceForm classic)
 	textBuilder ok200 [htmlCT] $ viewHome htmlEscape (Home form path)
 	where
-	path = sendRippleInvoicePath `relativeTo` root
+	path
+		| classic = sendClassicInvoicePath `relativeTo` root
+		| otherwise = sendRippleInvoicePath `relativeTo` root
 	hideErr opt = render (opt {errors = []})
 
-sendRippleInvoice :: URI -> Application
-sendRippleInvoice root req = do
-	(form,minvoice) <- postSimpleForm render (bodyFormEnv_ req) invoiceForm
-	case minvoice of
+rippleInvoiceForm :: URI -> Application
+rippleInvoiceForm = showInvoiceForm False
+
+classicInvoiceForm :: URI -> Application
+classicInvoiceForm = showInvoiceForm True
+
+sendInvoice :: Bool -> URI -> Application
+sendInvoice classic root req = do
+	(form,minv) <- postSimpleForm render (bodyFormEnv_ req) (invoiceForm classic)
+	case minv of
 		Just invoice -> do
 			mailBody <- responseToMailPart True =<< textBuilder ok200 []
-				(viewEmail (escapeURIString isUnescapedInURIComponent) invoice)
+				(template (escapeURIString isUnescapedInURIComponent) invoice)
 			liftIO $ renderSendMail Mail {
 				mailFrom    = emailToAddress $ from invoice,
 				mailTo      = [emailToAddress $ to invoice],
@@ -76,12 +90,26 @@ sendRippleInvoice root req = do
 				mailHeaders = [(s"Subject", formatSubject $ message invoice)],
 				mailParts   = [[mailBody]]
 			}
-			redirect' seeOther303 [] (rippleInvoiceFormPath `relativeTo` root)
+			redirect' seeOther303 [] home
 		Nothing ->
 			textBuilder ok200 [htmlCT] $ viewHome htmlEscape (Home form path)
 	where
+	template
+		| classic = viewClassicEmail
+		| otherwise = viewEmail
 	emailToAddress = Address Nothing . show
 	formatSubject msg
 		| T.null msg = s"Ripple Invoice"
 		| otherwise = s"Ripple Invoice \"" ++ T.take 30 msg ++ s"\""
-	path = sendRippleInvoicePath `relativeTo` root
+	path
+		| classic = sendClassicInvoicePath `relativeTo` root
+		| otherwise = sendRippleInvoicePath `relativeTo` root
+	home
+		| classic = classicInvoiceFormPath `relativeTo` root
+		| otherwise = rippleInvoiceFormPath `relativeTo` root
+
+sendRippleInvoice :: URI -> Application
+sendRippleInvoice = sendInvoice False
+
+sendClassicInvoice :: URI -> Application
+sendClassicInvoice = sendInvoice True
