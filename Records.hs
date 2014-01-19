@@ -2,6 +2,7 @@ module Records where
 
 import Prelude ()
 import BasicPrelude
+import qualified Data.Text as T
 
 import Text.Blaze.Html (Html)
 import Network.URI (URI)
@@ -22,11 +23,20 @@ instance Buildable (MarkupM a) where
 instance Buildable URI where
 	build = build . show
 
+instance Buildable RippleAddress where
+	build = build . show
+
+instance Buildable Currency where
+	build = build . showC
+		where
+		showC (ISO4217Currency cur) = show cur
+		showC (NonStandardCurrency str) = T.pack str
+
 instance DefaultWidget Currency where
 	wdef = text . fmap showC
 		where
 		showC (ISO4217Currency cur) = show cur
-		showC (NonStandardCurrency str) = fst $ head $ reads str
+		showC (NonStandardCurrency str) = T.pack str
 
 instance DefaultValidation Currency where
 	vdef = fmap ((\t -> go (t,reads t)) . textToString) SFV.text
