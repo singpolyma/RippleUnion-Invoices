@@ -3,7 +3,10 @@ module Application (rippleInvoiceForm, sendRippleInvoice, classicInvoiceForm, se
 
 import Prelude ()
 import BasicPrelude
+import Control.Error (readMay)
 import Data.Either.Combinators (leftToMaybe, rightToMaybe)
+import Data.Base58Address (RippleAddress)
+import qualified Ripple.Federation as Federation
 import qualified Data.Text as T
 
 import Network.Wai (Application, Request(..))
@@ -16,7 +19,10 @@ import SimpleForm.Combined (label, Label(..), wdef, vdef, ShowRead(..), unShowRe
 import SimpleForm.Render (errors)
 import SimpleForm.Render.XHTML5 (render)
 import SimpleForm.Digestive.Combined (SimpleForm', input, input_, getSimpleForm, postSimpleForm)
+import SimpleForm.Digestive.Validation (underRef)
 import SimpleForm (textarea)
+import Text.Digestive (validateM, Result(Success, Error))
+import Text.Blaze (toMarkup)
 
 import Network.URI (URI(..), isUnescapedInURIComponent, escapeURIString)
 import Network.URI.Partial (relativeTo)
@@ -46,7 +52,7 @@ invoiceForm :: (Functor m, MonadIO m) => Bool -> SimpleForm' m Invoice
 invoiceForm classic = do
 	from'     <- input_ (s"from") (Just . from)
 	to'       <- input_ (s"to") (Just . to)
-	ripple' <- uncurry (input (s"ripple") (Just . fmap ShowRead . ripple)) $
+	ripple' <- uncurry (input (s"ripple") (Just . fmap show . ripple)) $
 			if classic then
 					((wdef . (>>= leftToMaybe), fmap Left vdef),
 					mempty {label = lbl"Your username"})
@@ -58,7 +64,21 @@ invoiceForm classic = do
 	message'   <- input  (s"message") (Just . message) (textarea,vdef)
 		(mempty {required = False})
 
-	return $ Invoice <$> from' <*> to' <*> (fmap (fmap unShowRead) ripple') <*> amount' <*> currency' <*> message'
+	return $ Invoice <$> from' <*> to' <*> (underRef (validateM maybeResolve) ripple') <*> amount' <*> currency' <*> message'
+	where
+	maybeResolve (Left user) = return $ Success (Left user)
+	maybeResolve (Right adr) = case readMay (T.unpack adr) of
+		Just r -> return (Success (Right r))
+		_ -> case (T.unpack adr, readMay (T.unpack adr)) of
+			(_, Just alias) -> do
+				v <- liftIO $ Federation.resolve alias
+				case v of
+					Left (Federation.Error _ msg) -> return $ Error $ toMarkup msg
+					Right (Federation.ResolvedAlias _ r Nothing) -> return $ Success (Right r)
+					Right (Federation.ResolvedAlias _ r _) ->
+						return $ Error $ toMarkup "Destination tags not supported yet"
+			('~':rippleName, _) -> maybeResolve (Right $ T.pack $ rippleName ++ "@ripple.com")
+			(rippleName, _) -> maybeResolve (Right $ T.pack $ rippleName ++ "@ripple.com")
 
 showInvoiceForm :: Bool -> URI -> Application
 showInvoiceForm classic root (Request {queryString = qs}) = do

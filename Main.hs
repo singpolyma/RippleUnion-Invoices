@@ -6,6 +6,7 @@ import Network.URI (parseAbsoluteURI, URI(..), URIAuth(..))
 import System.IO (hPutStrLn, stderr)
 import Filesystem.Path.CurrentOS (FilePath)
 import Filesystem (getWorkingDirectory)
+import OpenSSL (withOpenSSL)
 
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
@@ -36,7 +37,7 @@ app root port portOverride = do
 	realPort = maybe port read portOverride
 
 main :: IO ()
-main = do
+main = withOpenSSL $ do
 	args <- getArgs
 	case args of
 		[root, port] ->
