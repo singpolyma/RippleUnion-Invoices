@@ -1,6 +1,158 @@
-@import "//rippleunion.com/base.css";
-@import "//rippleunion.com/form.css";
+html, body {
+	margin: 0;
+	padding: 0;
+	background-color: #888;
+	font-family: "Liberation Sans", FreeSans, sans-serif;
+}
 
+body {
+	margin-left: 5%;
+	margin-right: 5%;
+	margin-bottom: 2em;
+}
+
+body > header {
+	margin-top: 1em;
+	overflow: hidden;
+}
+body > header > h1 {
+	float: left;
+	margin: 0;
+	padding: 0;
+}
+body > header > h1 img {
+	height: 70px;
+	padding-right: 1em;
+}
+body > header > nav > ul {
+	float: right;
+	list-style-type: none;
+	padding: 0;
+}
+body > header > nav > ul > li {
+	list-style-type: none;
+	padding: 0;
+	display: inline-block;
+}
+body > header > nav > ul > li:after {
+	content: " | ";
+}
+body > header > nav > ul > li:last-child:after {
+	content: "";
+}
+
+body > section header {
+	background-color: #ccc;
+	margin-left: -5.5555555555%;
+	margin-right: -5.5555555555%;
+	padding-left: 5.5555555555%;
+	padding-right: 5.5555555555%;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+body > section header > h1 {
+	font-size: 1.5em;
+	max-width: 26.7em;
+	margin: 0 auto;
+	margin-bottom: 0.5em;
+}
+
+body > section header > p {
+	max-width: 40em;
+	margin: auto;
+	margin-bottom: 1em;
+}
+
+a, a:visited {
+	color: #00b;
+	text-decoration: none;
+	transition: color 0.15s ease-in-out 0s;
+}
+a:hover, a:active {
+	color: #080;
+}
+
+a img {
+	border-width: 0;
+}
+
+.root-ripple-address {
+	background: url(/sigil-12.png) no-repeat left center;
+	padding-left: 15px;
+	white-space: nowrap;
+}
+label {
+	display: block;
+}
+
+label > span {
+	display: inline-block;
+	margin-bottom: 0.2em;
+	width: 40%;
+}
+
+input {
+	width: 49%;
+	margin-left: 0.2em;
+}
+
+input, textarea {
+	margin-bottom: 0.2em;
+	padding: 0.5em 1em;
+	border-radius: 0.35em;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+	border: 1px solid #555;
+	transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s, background 0.15s ease-in-out 0s;
+	color: #000;
+	background: #eee;
+}
+
+input:focus, textarea:focus {
+	border-color: #66AFE9;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(102, 175, 233, 0.6);
+	background: #ccc;
+}
+
+button {
+	border: 1px solid #555;
+	color: #000;
+	background: #eee;
+	padding: 0.5em 1em;
+	border-radius: 0.35em;
+	float: right;
+	transition: background 0.15s ease-in-out 0s;
+	cursor: pointer;
+}
+
+button:hover, hover:active {
+	background: #ccc;
+}
+
+fieldset {
+	padding: 0;
+	margin: 0;
+	border-width: 0;
+}
+
+fieldset > legend {
+	display: none;
+}
+
+.error {
+	color: #f00;
+}
+
+label > .error {
+	display: none;
+	margin-left: 0.2em;
+}
+
+textarea {
+	display: block;
+}
 form {
 	display: table;
 	margin: auto;
